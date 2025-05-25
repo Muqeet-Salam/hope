@@ -10,15 +10,20 @@ students = [{"name":"uqeQ","marks":96},{"name":"qWQ3e1JcY","marks":5},{"name":"S
 
 student_dict = {s["name"]: s["marks"] for s in students}
 
+# Define route
 @app.get("/api")
 async def get_marks(request: Request):
     names = request.query_params.getlist("name")
-
+    
     if not names:
         return JSONResponse(status_code=400, content={"error": "No name parameters provided"})
 
     marks = [student_dict.get(name, 0) for name in names]
     return JSONResponse(content={"marks": marks})
 
-# 👇 This wraps the FastAPI app as a Lambda-style handler
-handler = Mangum(app)
+# 👇 Wrap FastAPI app with Mangum (AWS Lambda adapter)
+asgi_handler = Mangum(app)
+
+# 👇 Vercel-compatible handler function
+def handler(event, context):
+    return asgi_handler(event, context)
